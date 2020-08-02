@@ -14,6 +14,7 @@ public class TaskUtils {
 
     @Autowired
     private ApplicationContext applicationContext;
+
     /**
      * 通过反射调用scheduleJob中定义的方法
      *
@@ -37,7 +38,7 @@ public class TaskUtils {
                 try {
                     clazz = Class.forName(scheduleJob.getBeanClass());
                     object = SpringUtils.getBean(clazz);
-                    if(object == null){
+                    if (object == null) {
                         jobStr = "定时任务名称 = [" + scheduleJob.getJobName() + "]-在spring 中没有获得 bean, 调用 spring 方法再次构建中...";
                         LogUtils.info(jobStr, scheduleJob.getBeanClass());
                         object = SpringUtils.getBeanByType(clazz);
@@ -57,7 +58,9 @@ public class TaskUtils {
             clazz = object.getClass();
             Method method = null;
             try {
-                method = clazz.getDeclaredMethod(scheduleJob.getMethodName());
+                //无参数方法
+                //method = clazz.getDeclaredMethod(scheduleJob.getMethodName());
+                method = clazz.getDeclaredMethod(scheduleJob.getMethodName(), String.class);
             } catch (NoSuchMethodException e) {
                 String jobStr = "定时任务名称 = [" + scheduleJob.getJobName() + "] = 未启动成功，方法名设置错误！！！";
                 LogUtils.error(jobStr, e);
@@ -67,7 +70,7 @@ public class TaskUtils {
             }
             if (method != null) {
                 try {
-                    method.invoke(object);
+                    method.invoke(object, scheduleJob.getSpringId());
                     LogUtils.info("定时任务名称 = [" + scheduleJob.getJobName() + "] = 启动成功");
                 } catch (Exception e) {
                     Response.newResponse().error(e);
